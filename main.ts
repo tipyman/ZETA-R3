@@ -8,7 +8,7 @@
  * ZETA-R3 block Ver1
  */
 
-//% weight=100 color=#0096FF icon="\uf552" block="ZETA_R3"
+//% weight=100 color=#0096FF icon="\uf444" block="ZETA_R3"
 namespace ZETag_R2 {
     let buffer: Buffer = Buffer.create(0)
     let dataBuffer = pins.createBuffer(1);
