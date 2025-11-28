@@ -4,9 +4,7 @@
     "dependencies": {
         "core": "*",
         "radio": "*",
-        "microphone": "*",
-        "ZETag-R2": "github:tipyman/pxt-ZETag-r2#75a914c7597ac8a9d0c6b682f986781536be7e66",
-        "UART Binary communication": "github:tipyman/pxt-uart_binary_communication#d47fb114338f9d92af7ded6d3f6bb3ec11cb6909"
+        "microphone": "*"
     },
     "files": [
         "main.blocks",

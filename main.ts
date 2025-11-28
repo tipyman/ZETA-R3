@@ -68,7 +68,7 @@ namespace ZETag_R2 {
         let Array_length = TX_array.length
         let k = 0
         for (let i = 0; i < Array_length; i++) {
-            UART_BIN.UART_BIN_TX(TX_array[k])
+            UART_BIN_TX(TX_array[k])
             k += 1
         }
         let crc_check = TX_array.slice(2)
