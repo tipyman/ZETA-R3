@@ -12,6 +12,7 @@
 namespace ZETag_R2 {
     let buffer: Buffer = Buffer.create(0)
     let dataBuffer = pins.createBuffer(1);
+    pins.digitalWritePin(DigitalPin.P2, 0)  // Wakeup off
 
     /**
      * Binary data transmission over UART
@@ -63,7 +64,7 @@ namespace ZETag_R2 {
     //% blockId=ZETA_command_execution block="ZETA command assert %TX_array"
     //% weight=80 blockGap=8
     export function command_assert (TX_array: number []) {
-        pins.digitalWritePin(DigitalPin.P2, 0)
+        pins.digitalWritePin(DigitalPin.P2, 0)  // wakeup on
         basic.pause(10)
         let Array_length = TX_array.length
         let k = 0
@@ -77,7 +78,7 @@ namespace ZETag_R2 {
         UART_BIN_TX(crc16_data & 0xff)
         let Query_array = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
         Query_array = receive_query()
-        pins.digitalWritePin(DigitalPin.P2, 1)
+        pins.digitalWritePin(DigitalPin.P2, 1)  // wakeup off
         return Query_array
     }
 
@@ -89,15 +90,10 @@ namespace ZETag_R2 {
     //% blockId=ZETA_data_transmission block="ZETA data transmission %TX_array"
     //% weight=80 blockGap=8
     export function data_tx (TX_array: number []) {
-        pins.digitalWritePin(DigitalPin.P2, 0)
+        pins.digitalWritePin(DigitalPin.P2, 0)  // wakeup on
         basic.pause(10)
         let Array_length = TX_array.length
-        let data_array = [
-        250,
-        245,
-        Array_length + 3,
-        2
-        ]
+        let data_array = [0xfa, 0xf5, Array_length + 3, 2]
         let k = 0
         for (let i = 0; i < 4; i++) {
             UART_BIN_TX(data_array[k])
@@ -117,7 +113,7 @@ namespace ZETag_R2 {
         if (Query_array[0] == 0) {
             Query_array[3] = 0
         }
-        pins.digitalWritePin(DigitalPin.P2, 1)
+        pins.digitalWritePin(DigitalPin.P2, 1)  // wakeup off
         return Query_array[3]
     }
 
