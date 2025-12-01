@@ -9,7 +9,7 @@
  */
 
 //% weight=100 color=#0096FF icon="\uf434" block="ZETA-R3"
-namespace ZETag_R2 {
+namespace ZETA_R3 {
     let buffer: Buffer = Buffer.create(0)
     let dataBuffer = pins.createBuffer(1);
     pins.digitalWritePin(DigitalPin.P2, 0)  // Wakeup off
@@ -63,20 +63,20 @@ namespace ZETag_R2 {
     */
     //% blockId=ZETA_command_execution block="ZETA command assert %TX_array"
     //% weight=80 blockGap=8
-    export function command_assert (TX_array: number []) {
+    export function command_assert(TX_array: number[]) {
         pins.digitalWritePin(DigitalPin.P2, 0)  // wakeup on
         basic.pause(10)
         let Array_length = TX_array.length
+        let crc_check = TX_array.slice(2)
+        let crc16_data = crc16(crc_check)
+        TX_array.push((crc16_data >> 8) & 0xff)
+        TX_array.push(crc16_data & 0xff)
         let k = 0
-        for (let i = 0; i < Array_length; i++) {
+        for (let i = 0; i < Array_length + 2; i++) {
             UART_BIN_TX(TX_array[k])
             k += 1
         }
-        let crc_check = TX_array.slice(2)
-        let crc16_data = crc16(crc_check)
-        UART_BIN_TX((crc16_data >> 8) & 0xff)
-        UART_BIN_TX(crc16_data & 0xff)
-        let Query_array = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        let Query_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         Query_array = receive_query()
         pins.digitalWritePin(DigitalPin.P2, 1)  // wakeup off
         return Query_array
@@ -89,26 +89,22 @@ namespace ZETag_R2 {
     */
     //% blockId=ZETA_data_transmission block="ZETA data transmission %TX_array"
     //% weight=80 blockGap=8
-    export function data_tx (TX_array: number []) {
+    export function data_tx(TX_array: number[]) {
         pins.digitalWritePin(DigitalPin.P2, 0)  // wakeup on
         basic.pause(10)
         let Array_length = TX_array.length
         let data_array = [0xfa, 0xf5, Array_length + 3, 2]
+        let crc_check = data_array.concat(TX_array).slice(2)
+        let crc16_data = crc16(crc_check)
+        TX_array.push((crc16_data >> 8) & 0xff)
+        TX_array.push(crc16_data & 0xff)
+
         let k = 0
-        for (let i = 0; i < 4; i++) {
-            UART_BIN_TX(data_array[k])
-            k += 1
-        }
-        k = 0
-        for (let i = 0; i < Array_length; i++) {
+        for (let i = 0; i < Array_length + 6; i++) {
             UART_BIN_TX(TX_array[k])
             k += 1
         }
-        let crc_check = data_array.concat(TX_array).slice(2)
-        let crc16_data = crc16(crc_check)
-        UART_BIN_TX((crc16_data >> 8) & 0xff)
-        UART_BIN_TX(crc16_data & 0xff)
-        let Query_array = [0,0,0,0,0,0]
+        let Query_array = [0, 0, 0, 0, 0, 0]
         Query_array = receive_query()
         if (Query_array[0] == 0) {
             Query_array[3] = 0
@@ -119,8 +115,8 @@ namespace ZETag_R2 {
 
     //% blockId=Inquiry MAC address block="Inquiry MAC address"
     //% weight=80 blockGap=8
-    export function Inquire_MAC () {
-        let temp = [0,0,0,0,0,0,0,0]
+    export function Inquire_MAC() {
+        let temp = [0, 0, 0, 0, 0, 0, 0, 0]
         temp = command_assert([0xfa, 0xf5, 0x03, 0x10])
         temp[0] = temp[4]
         temp[1] = temp[5]
@@ -131,8 +127,8 @@ namespace ZETag_R2 {
 
     //% blockId= Receive_query data block="Receive query data"
     //% weight=80 blockGap=8
-    export function receive_query () {
-        let temp = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    export function receive_query() {
+        let temp = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         if (UART_BIN_RX() == 0xfa) {
             if (UART_BIN_RX() == 0xf5) {
                 temp[0] = 0xfa
@@ -151,7 +147,7 @@ namespace ZETag_R2 {
 
     //% blockId= Inquire_Module_Status block="Inquire Module Status"
     //% weight=80 blockGap=8
-    export function Inquire_Module_Status () {
+    export function Inquire_Module_Status() {
         let temp = command_assert([0xfa, 0xf5, 0x03, 0x14])
         return temp[3]
     }
