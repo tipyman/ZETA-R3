@@ -65,7 +65,7 @@ namespace ZETA_R3 {
     //% weight=80 blockGap=8
     export function command_assert(TX_array: number[]) {
         pins.digitalWritePin(DigitalPin.P2, 0)  // wakeup on
-        basic.pause(10)
+        basic.pause(20)     // The specification requires 10 milliseconds, but settle 20msec for safety
         let Array_length = TX_array.length
         let crc_check = TX_array.slice(2)
         let crc16_data = crc16(crc_check)
@@ -76,9 +76,10 @@ namespace ZETA_R3 {
             UART_BIN_TX(TX_array[k])
             k += 1
         }
+        basic.pause(100)    // May not need this wait times
+        pins.digitalWritePin(DigitalPin.P2, 1)  // wakeup off
         let Query_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         Query_array = receive_query()
-        pins.digitalWritePin(DigitalPin.P2, 1)  // wakeup off
         return Query_array
     }
 
@@ -90,26 +91,9 @@ namespace ZETA_R3 {
     //% blockId=ZETA_data_transmission block="ZETA data transmission %TX_array"
     //% weight=80 blockGap=8
     export function data_tx(TX_array: number[]) {
-        pins.digitalWritePin(DigitalPin.P2, 0)  // wakeup on
-        basic.pause(10)
         let Array_length = TX_array.length
         let data_array = [0xfa, 0xf5, Array_length + 3, 2]
-        let crc_check = data_array.concat(TX_array).slice(2)
-        let crc16_data = crc16(crc_check)
-        TX_array.push((crc16_data >> 8) & 0xff)
-        TX_array.push(crc16_data & 0xff)
-
-        let k = 0
-        for (let i = 0; i < Array_length + 6; i++) {
-            UART_BIN_TX(TX_array[k])
-            k += 1
-        }
-        let Query_array = [0, 0, 0, 0, 0, 0]
-        Query_array = receive_query()
-        if (Query_array[0] == 0) {
-            Query_array[3] = 0
-        }
-        pins.digitalWritePin(DigitalPin.P2, 1)  // wakeup off
+        let Query_array = command_assert(data_array.concat(TX_array))
         return Query_array[3]
     }
 
@@ -125,30 +109,39 @@ namespace ZETA_R3 {
         return temp
     }
 
-    //% blockId= Receive_query data block="Receive query data"
-    //% weight=80 blockGap=8
-    export function receive_query() {
-        let temp = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        if (UART_BIN_RX() == 0xfa) {
-            if (UART_BIN_RX() == 0xf5) {
-                temp[0] = 0xfa
-                temp[1] = 0xf5
-                let counter = UART_BIN_RX()
-                temp[2] = counter
-                let k = 3
-                for (let i = 0; i < counter; i++) {
-                    temp[k] = UART_BIN_RX()
-                    k += 1
-                }
-            }
-        }
-        return temp
-    }
-
     //% blockId= Inquire_Module_Status block="Inquire Module Status"
     //% weight=80 blockGap=8
     export function Inquire_Module_Status() {
         let temp = command_assert([0xfa, 0xf5, 0x03, 0x14])
         return temp[3]
+    }
+
+    //% blockId= Receive_query data block="Receive query data"
+    //% weight=80 blockGap=8
+    export function receive_query() {
+        let temp = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        let k = 0   // Waiting timer
+        while(1){
+            let data = UART_BIN_RX()
+            if (data == 0xfa){
+                break;
+            }
+            k += 1;
+            if (k > 15){
+                return temp
+            }
+        }
+        if (UART_BIN_RX() == 0xf5) {
+            temp[0] = 0xfa
+            temp[1] = 0xf5
+            let counter = UART_BIN_RX()
+            temp[2] = counter
+            k = 3
+            for (let i = 0; i < counter; i++) {
+                temp[k] = UART_BIN_RX()
+                k += 1
+            }
+        }
+        return temp
     }
 }
