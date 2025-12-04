@@ -99,7 +99,7 @@ namespace ZETA_R3 {
 
     //% blockId=Inquiry MAC address block="Inquiry MAC address"
     //% weight=80 blockGap=8
-    export function Inquire_MAC(): number []{
+    export function Inquire_MAC(): number[] {
         let temp = [0, 0, 0, 0, 0, 0, 0, 0]
         temp = command_assert([0xfa, 0xf5, 0x03, 0x10])
         temp[0] = temp[4]
@@ -118,37 +118,37 @@ namespace ZETA_R3 {
 
     //% blockId= Inquire_Version="Inquire Protocol version"
     //% weight=80 blockGap=8
-    export function Inquire_Version():number {
+    export function Inquire_Version(): number {
         let temp = command_assert([0xfa, 0xf5, 0x03, 0])
-        return ((temp[4] << 8 ) + temp[5]);
+        return ((temp[4] << 8) + temp[5]);
     }
 
     //% blockId= Inquire_Network_Time="Inquire network time"
     //% weight=80 blockGap=8
-    export function Inquire_Network_Time() :number []{
+    export function Inquire_Network_Time(): number[] {
         const temp = command_assert([0xfa, 0xf5, 0x03, 0x11]).slice(4, 11);
         return temp;
     }
 
     //% blockId= Inquire_Network_Quality="Inquire network quality"
     //% weight=80 blockGap=8
-    export function Inquire_Network_Quality():number {
+    export function Inquire_Network_Quality(): number {
         const temp = command_assert([0xfa, 0xf5, 0x03, 0x13]);
         return temp[4];
     }
 
     //% blockId= Receive_query data block="Receive query data"
     //% weight=80 blockGap=8
-    export function receive_query():number [] {
+    export function receive_query(): number[] {
         let temp3 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         let m = 0   // Waiting timer
-        while(1){
+        while (1) {
             let data = UART_BIN_RX()
-            if (data == 0xfa){
+            if (data == 0xfa) {
                 break;
             }
             m += 1;
-            if (m > 15){
+            if (m > 15) {
                 return temp3
             }
         }
